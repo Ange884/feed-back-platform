@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Mail, Lock, Github, Chrome } from "lucide-react";
 import LoginImage from "../assets/login.jpg";
 import FormInput from "../components/FormInput";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -10,6 +11,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +33,9 @@ const Login = () => {
     setTimeout(() => {
       setLoading(false);
       setMessage("Logged in successfully.");
+      navigate("/feedback");
     }, 1000);
+
   };
 
   return (

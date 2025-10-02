@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Mail, Lock, User as UserIcon, Github, Chrome } from "lucide-react";
 import loginImage from "../assets/login.jpg";
 import FormInput from "../components/FormInput";
+import { useNavigate } from "react-router-dom";
 
 const SignUp = () => {
   const [fullName, setFullName] = useState("");
@@ -11,6 +12,7 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({ fullName: "", email: "", password: "" });
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,11 +34,14 @@ const SignUp = () => {
     }
     if (hasError) return;
 
+
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
       setMessage("Account created successfully.");
+      navigate("/feedback");
     }, 1000);
+
   };
 
   return (

@@ -1,94 +1,117 @@
-import React from 'react';
-import { Star, Calendar, User } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import FormInput from "./FormInput"; // import your component
 
-const FeedbackCard = ({ feedback, showActions = false, onStatusChange }) => {
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Resolved':
-        return 'bg-green-100 text-green-800';
-      case 'In Progress':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Pending':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+export default function FeedbackDashboard() {
+  const [name, setName] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [feedbacks, setFeedbacks] = useState([]);
+
+  useEffect(() => {
+    setFeedbacks([
+      { id: 1, name: "Alice", text: "Street lights not working", status: "Pending" },
+      { id: 2, name: "John", text: "Water shortage in my area", status: "Answered" },
+    ]);
+  }, []);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!name.trim() || !feedback.trim()) return;
+
+    const newFeedback = {
+      id: feedbacks.length + 1,
+      name,
+      text: feedback,
+      status: "Pending",
+    };
+
+    setFeedbacks([newFeedback, ...feedbacks]);
+    setName("");
+    setFeedback("");
+    // After submitting, navigate to dashboard
+    if (typeof window !== 'undefined') {
+      window.location.href = '/dashboard';
     }
   };
 
-  const renderStars = (rating) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={`h-4 w-4 ${
-          i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-        }`}
-      />
-    ));
-  };
-
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
-        <div className="flex-1">
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="flex items-center space-x-1">
-              <User className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">
-                {feedback.name || 'Anonymous'}
-              </span>
-            </div>
-            <span className="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
-              {feedback.department}
-            </span>
-          </div>
-          
-          <div className="flex items-center space-x-2 mb-3">
-            <div className="flex space-x-1">
-              {renderStars(feedback.rating)}
-            </div>
-            <span className="text-sm text-gray-600">({feedback.rating}/5)</span>
-          </div>
-        </div>
+    <div className="max-w-4xl mx-auto mt-12 px-6">
+      {/* Header */}
+      <h1 className="text-3xl font-bold text-center text-blue-600 mb-10">
+        Public Service Feedback Portal
+      </h1>
 
-        <div className="flex flex-col items-end space-y-2">
-          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(feedback.status)}`}>
-            {feedback.status}
-          </span>
-          <div className="flex items-center space-x-1 text-sm text-gray-500">
-            <Calendar className="h-4 w-4" />
-            <span>{new Date(feedback.date).toLocaleDateString()}</span>
+      {/* Feedback form */}
+      <div className="bg-white rounded-2xl shadow-lg p-8 mb-10 border border-gray-100">
+        <h2 className="text-xl font-semibold mb-6">Submit Your Feedback</h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <FormInput
+            id="name"
+            label="Your Name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter your name"
+            required
+          />
+
+          <div className="space-y-1">
+            <label
+              htmlFor="feedback"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Your Feedback <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              id="feedback"
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="Describe your issue or suggestion..."
+              required
+              rows="5"
+              className="w-full px-4 py-3 border rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 placeholder:text-gray-400"
+            />
           </div>
-        </div>
+
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition shadow-md"
+          >
+            Submit Feedback
+          </button>
+        </form>
       </div>
 
-      <div className="mb-4">
-        <p className="text-gray-700 leading-relaxed">{feedback.feedback}</p>
-      </div>
+      {/* Submitted feedbacks */}
+      <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+        <h2 className="text-xl font-semibold mb-6">Your Submitted Feedbacks</h2>
 
-      {showActions && (
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => onStatusChange(feedback.id, 'In Progress')}
-            className="px-3 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full hover:bg-yellow-200 transition-colors"
-          >
-            Mark In Progress
-          </button>
-          <button
-            onClick={() => onStatusChange(feedback.id, 'Resolved')}
-            className="px-3 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full hover:bg-green-200 transition-colors"
-          >
-            Mark Resolved
-          </button>
-          <button
-            onClick={() => onStatusChange(feedback.id, 'Pending')}
-            className="px-3 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full hover:bg-red-200 transition-colors"
-          >
-            Mark Pending
-          </button>
-        </div>
-      )}
+        {feedbacks.length === 0 ? (
+          <p className="text-gray-500">No feedback submitted yet.</p>
+        ) : (
+          <ul className="space-y-4">
+            {feedbacks.map((fb) => (
+              <li
+                key={fb.id}
+                className="flex justify-between items-center p-4 border rounded-lg shadow-sm hover:bg-gray-50 transition"
+              >
+                <div>
+                  <p className="font-medium">{fb.name}</p>
+                  <p className="text-gray-600 text-sm">{fb.text}</p>
+                </div>
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    fb.status === "Answered"
+                      ? "bg-green-100 text-green-600"
+                      : "bg-yellow-100 text-yellow-600"
+                  }`}
+                >
+                  {fb.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
-};
-
-export default FeedbackCard;
+}
