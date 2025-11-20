@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { Home, Bell, Mail, Settings, LogOut, ChevronRight, User, MessageCircle, CheckCircle2, AlertCircle } from "lucide-react";
+import { Navigate } from "react-router-dom";
 
-// Reusable sidebar item
 function SidebarItem({ icon: Icon, label, active = false, badgeCount = 0, onClick }){
   return (
     <button
@@ -21,7 +21,6 @@ function SidebarItem({ icon: Icon, label, active = false, badgeCount = 0, onClic
   );
 }
 
-// Reusable stat card
 function StatCard({ title, value, icon: Icon, color = "blue" }){
   const colorClasses = useMemo(() => {
     const map = {
@@ -115,8 +114,35 @@ export default function Dashboard(){
   const markMessageRead = (id) =>
     setMessages(prev => prev.map(m => m.id === id ? { ...m, read: true } : m));
 
+  // Section refs for smooth scrolling
+  const homeRef = useRef(null);
+  const notificationsRef = useRef(null);
+  const messagesRef = useRef(null);
+  const settingsRef = useRef(null);
+
+  const scrollTo = (ref) => {
+    if (ref && ref.current) {
+      ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  // Logout modal + toast
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+
+  const handleLogout = () => {
+    setShowLogoutModal(false);
+    setShowToast(true);
+  };
+
+  useEffect(() => {
+    if (!showToast) return;
+    const t = setTimeout(() => setShowToast(false), 2500);
+    return () => clearTimeout(t);
+  }, [showToast]);
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 ">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-screen">
           {/* Sidebar */}
@@ -133,13 +159,36 @@ export default function Dashboard(){
                   </div>
                 </div>
               </div>
-              <div className="space-y-1">
-                <SidebarItem icon={Home} label="Home" active={active === "Home"} onClick={() => setActive("Home")} />
-                <SidebarItem icon={Bell} label="Notifications" active={active === "Notifications"} onClick={() => setActive("Notifications")} badgeCount={unreadNotifications} />
-                <SidebarItem icon={Mail} label="Messages" active={active === "Messages"} onClick={() => setActive("Messages")} badgeCount={unreadMessages} />
-                <SidebarItem icon={Settings} label="Settings" active={active === "Settings"} onClick={() => setActive("Settings")} />
+              <div className="space-y-6 mb-12">
+                <SidebarItem
+                  icon={Home}
+                  label="Home"
+                  className="mb-12"
+                  active={active === "Home"}
+                  onClick={() => { setActive("Home"); Navigate('/app') }}
+                />
+                <SidebarItem
+                  icon={Bell}
+                  label="Notifications"
+                  active={active === "Notifications"}
+                  onClick={() => { setActive("Notifications"); Navigate('/notifications')}}
+                  badgeCount={unreadNotifications}
+                />
+                <SidebarItem
+                  icon={Mail}
+                  label="Messages"
+                  active={active === "Messages"}
+                  onClick={() => { setActive("Messages"); Navigate('/messages') }}
+                  badgeCount={unreadMessages}
+                />
+                <SidebarItem
+                  icon={Settings}
+                  label="Settings"
+                  active={active === "Settings"}
+                  onClick={() => { setActive("Settings"); Navigate('/settings') }}
+                />
                 <div className="pt-2 border-t border-gray-100">
-                  <SidebarItem icon={LogOut} label="Logout" onClick={() => alert("Logged out (demo)")} />
+                  <SidebarItem icon={LogOut} label="Logout" onClick={() => setShowLogoutModal(true)} />
                 </div>
               </div>
             </div>
@@ -148,19 +197,19 @@ export default function Dashboard(){
           {/* Main content */}
           <main className="lg:col-span-3 h-full">
             {/* Welcome */}
-            <div className="mb-6">
+            <div className="mb-6" ref={homeRef}>
               <h1 className="text-2xl font-bold text-gray-900">Hello, {userName}</h1>
               <p className="text-gray-600">Here is your latest activity and feedback summary.</p>
             </div>
 
-            {/* Stats */}
+           
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
               <StatCard title="Total Feedback" value={stats.total} icon={MessageCircle} color="blue" />
               <StatCard title="Pending" value={stats.pending} icon={AlertCircle} color="yellow" />
               <StatCard title="Answered" value={stats.answered} icon={CheckCircle2} color="green" />
             </div>
 
-            {/* Recent feedbacks */}
+            
             <div className="bg-white rounded-xl shadow border border-gray-100 p-5 mb-6">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-semibold text-gray-800">Recent Feedbacks</h2>
@@ -179,34 +228,45 @@ export default function Dashboard(){
               </ul>
             </div>
 
-            {/* Notifications + Messages */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-stretch">
-              <div className="bg-white rounded-xl shadow border border-gray-100 p-5 h-full flex flex-col">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-semibold text-gray-800">Notifications</h2>
-                  {unreadNotifications > 0 && <span className="text-xs text-gray-500">{unreadNotifications} unread</span>}
-                </div>
-                <div className="space-y-3 flex-1 overflow-auto">
-                  {notifications.map(n => (
-                    <NotificationCard key={n.id} item={n} onMarkRead={() => markNotificationRead(n.id)} />
-                  ))}
-                </div>
-              </div>
-              <div className="bg-white rounded-xl shadow border border-gray-100 p-5 h-full flex flex-col">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-semibold text-gray-800">Messages</h2>
-                  {unreadMessages > 0 && <span className="text-xs text-gray-500">{unreadMessages} unread</span>}
-                </div>
-                <div className="space-y-3 flex-1 overflow-auto">
-                  {messages.map(m => (
-                    <MessageCard key={m.id} item={m} onMarkRead={() => markMessageRead(m.id)} />
-                  ))}
-                </div>
-              </div>
-            </div>
+            
           </main>
         </div>
       </div>
+
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50"></div>
+          <div className="relative bg-white w-full max-w-sm mx-auto rounded-xl shadow-lg p-6">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-full bg-red-100 text-red-600">
+                <LogOut className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">Sign out</h3>
+                <p className="text-sm text-gray-600">Are you sure you want to log out?</p>
+              </div>
+            </div>
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button onClick={() => setShowLogoutModal(false)} className="px-4 py-2 text-sm rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50">Cancel</button>
+              <button onClick={handleLogout} className="px-4 py-2 text-sm rounded-md bg-red-600 text-white hover:bg-red-700">Log out</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showToast && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <div className="bg-white border border-gray-200 shadow-lg rounded-lg p-4 flex items-center gap-3">
+            <div className="p-2 rounded-full bg-green-100 text-green-700">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-800">Logged out</p>
+              <p className="text-xs text-gray-500">You have been signed out successfully.</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

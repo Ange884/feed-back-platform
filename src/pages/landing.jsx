@@ -4,7 +4,7 @@ import Navbar from "../components/navbar";
 import sideImage from "../assets/feedback.jpg";
 import Footer from "../components/footer";
 import About from "./About";
-import Dashboard from "./dashboard";
+import Dashboard from "../components/Dashboard";
 import Reports from "./reports";
 
 const LandingPage = () => {
